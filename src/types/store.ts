@@ -1,4 +1,6 @@
-import { type User } from './auth.ts';
+import { type ChangePasswordRequest, type LoginRequest, type RegisterRequest, type ResetPasswordRequest, type User } from './auth.ts';
+import type { CreateNotebookRequest, UpdateNotebookRequest, CreatePromiseRequest, UpdatePromiseRequest, CreateSubscriptionRequest, UpdateSubscriptionRequest } from './request.ts';
+
 
 export interface Notebook {
     id: number;
@@ -12,30 +14,48 @@ export interface Notebook {
 export interface Subscription {
     id: number;
     user_id: number;
-    title: string;
+    service_name: string;
     price: number;
     status: 'active' | 'inactive' | 'cancelled';
-    created_at: string;
-    updated_at: string;
+    billing_cycle: string,
+    next_billing_date: string,
+    alert_message: string,
+    is_red_alert: boolean,
+    color_code: string,
+    notes: string,
 }
 
 
 export interface PromiseItem {
     id: number;
     user_id: number;
-    title: string;
-    description: string;
+    promiser_name: string;
+    promise_content: string;
+    date_made: string;
     status: 'pending' | 'completed' | 'cancelled';
     deadline?: string;
-    created_at: string;
-    updated_at: string;
+    importance_level: number;
+
 }
 
 export interface AuthState {
     token: string | null;
     user: User | null;
     isLoading: boolean;
-    error: string | null;
+    err: string | null;
+
+    login: (credentials: LoginRequest) => Promise<void>;
+    register: (credentials: RegisterRequest) => Promise<void>;
+    logout: () => Promise<void>;
+    fetchMe: () => Promise<void>;
+    refresh: () => Promise<void>;
+    changePassword: (credentials: ChangePasswordRequest) => Promise<void>;
+    resetPassword: (data: ResetPasswordRequest) => Promise<void>;
+
+    setToken: (token: string) => void;
+    setUser: (user: User) => void;
+    clearState: () => void;
+    clearError: () => void;
 }
 
 export interface NotebookState {
@@ -43,6 +63,14 @@ export interface NotebookState {
     currentNotebook: Notebook | null;
     isLoading: boolean;
     error: string | null;
+
+    getAll: () => Promise<void>;
+    getById: (id: number) => Promise<void>;
+    create: (data: CreateNotebookRequest) => Promise<void>;
+    update: (id: number, data: UpdateNotebookRequest) => Promise<void>;
+    delete: (id: number) => Promise<void>;
+
+
 }
 
 export interface PromiseState {
@@ -50,6 +78,13 @@ export interface PromiseState {
     currentPromise: PromiseItem | null;
     isLoading: boolean;
     error: string | null;
+
+    getAll: () => Promise<void>;
+    getById: (id: number) => Promise<void>;
+    create: (data: CreatePromiseRequest) => Promise<void>;
+    update: (id: number, data: UpdatePromiseRequest) => Promise<void>;
+    delete: (id: number) => Promise<void>;
+
 }
 
 export interface SubscriptionState {
@@ -57,6 +92,12 @@ export interface SubscriptionState {
     currentSubscription: Subscription | null;
     isLoading: boolean;
     error: string | null;
+
+    getAll: () => Promise<void>;
+    getById: (id: Number) => Promise<void>;
+    create: (data: CreateSubscriptionRequest) => Promise<void>;
+    update: (id: Number, data: UpdateSubscriptionRequest) => Promise<void>;
+    delete: (id: number) => Promise<void>;
 }
 
 

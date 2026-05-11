@@ -1,5 +1,5 @@
 import api from '@/lib/axios.ts';
-import type { LoginRequest, RegisterRequest, AuthResponse, ChangePasswordRequest, ResetPasswordRequest, RefreshResponse } from '@/types/auth.ts';
+import type { LoginRequest, RegisterRequest, AuthResponse, ChangePasswordRequest, ResetPasswordRequest, RefreshResponse, User } from '@/types/auth.ts';
 
 export const authService = {
     login: async (credentials: LoginRequest): Promise<AuthResponse> => {
@@ -15,8 +15,7 @@ export const authService = {
     },
 
     logout: async (): Promise<void> => {
-        const { data } = await api.post('/logout');
-        return data;
+        await api.post('/logout');
 
     },
 
@@ -34,7 +33,11 @@ export const authService = {
     resetPassword: async (data: ResetPasswordRequest): Promise<void> => {
         await api.post('/reset_password', data);
 
+    },
 
+    fetchMe: async (): Promise<User> => {
+        const { data } = await api.get('/me');
+        return data; 
     }
 
 }

@@ -21,7 +21,7 @@ export const notebookService = {
     },
 
     update: async (id: number, notebook: UpdateNotebookRequest): Promise<Notebook> => {
-        const { data } = await api.put(`notebooks/${id}`, notebook);
+        const { data } = await api.put(`/notebooks/${id}`, notebook);
         return data;
     },
 
