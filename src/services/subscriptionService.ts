@@ -31,7 +31,8 @@ export const subscriptionService = {
     delete: async (id: number): Promise<void> => {
         await api.delete(`/subscriptions/${id}`);
     }
-    
+
+
 }
 
 

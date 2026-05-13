@@ -7,8 +7,8 @@ export interface Notebook {
     user_id: number;
     title: string;
     content: string;
-    created_at: string;
-    updated_at: string;
+    category: string;
+    createdAt: string;
 }
 
 export interface Subscription {

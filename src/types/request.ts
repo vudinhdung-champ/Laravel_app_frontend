@@ -16,6 +16,7 @@ export interface UpdateNotebookRequest {
 export interface CreatePromiseRequest {
   promiser_name: string;
   promise_content: string;
+  date_made: string;
   status: 'pending' | 'completed' | 'cancelled';
   deadline?: string;
   importance_level: number;
@@ -24,6 +25,7 @@ export interface CreatePromiseRequest {
 export interface UpdatePromiseRequest {
   promiser_name?: string;
   promise_content?: string;
+  date_made?: string;
   status?: 'pending' | 'completed' | 'cancelled';
   deadline?: string;
   importance_level?: number;
@@ -37,9 +39,6 @@ export interface CreateSubscriptionRequest {
   status: 'active' | 'inactive' | 'cancelled';
   billing_cycle: string;
   next_billing_date: string;
-  alert_message: string;
-  is_red_alert: boolean;
-  color_code: string;
   notes: string;
 }
 
@@ -49,9 +48,6 @@ export interface UpdateSubscriptionRequest {
   status?: 'active' | 'inactive' | 'cancelled';
   billing_cycle?: string;
   next_billing_date?: string;
-  alert_message?: string;
-  is_red_alert?: boolean;
-  color_code?: string;
   notes?: string;
 }
 

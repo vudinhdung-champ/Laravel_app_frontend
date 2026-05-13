@@ -1,0 +1,13 @@
+import { Outlet } from 'react-router-dom';
+import Sidebar from './sidebar';
+
+export default function Layout() {
+    return (
+        <div style={{ display: 'flex', minHeight: '100vh' }}>
+            <Sidebar />
+            <main style={{ flex: 1, padding: '24px' }}>
+                <Outlet />  {/* Pages render vào đây */}
+            </main>
+        </div>
+    );
+}
