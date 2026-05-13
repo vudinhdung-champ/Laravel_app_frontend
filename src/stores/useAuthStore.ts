@@ -44,7 +44,7 @@ export const useAuthStore = create<AuthState>()(
                 set({ isLoading: true });
                 try {
 
-                    localStorage.clear();
+                    localStorage.removeItem('token');
 
                     const response = await authService.login(credentials);
 

@@ -5,24 +5,24 @@ import type { CreateNotebookRequest, UpdateNotebookRequest } from '@/types/reque
 export const notebookService = {
     getAll: async (): Promise<Notebook[]> => {
         const { data } = await api.get('/notebooks');
-        return data;
+        return data.data;
     },
 
     getById: async (id: number): Promise<Notebook> => {
         const { data } = await api.get(`/notebooks/${id}`);
-        return data;        
+        return data.data;
 
     },
 
-    create: async(credentials: CreateNotebookRequest): Promise<Notebook> => {
+    create: async (credentials: CreateNotebookRequest): Promise<Notebook> => {
         const { data } = await api.post('/notebooks', credentials);
-        return data;
+        return data.data;
 
     },
 
     update: async (id: number, notebook: UpdateNotebookRequest): Promise<Notebook> => {
         const { data } = await api.put(`/notebooks/${id}`, notebook);
-        return data;
+        return data.data;
     },
 
     delete: async (id: number): Promise<void> => {

@@ -4,27 +4,27 @@ import type { CreateSubscriptionRequest, UpdateSubscriptionRequest } from '@/typ
 
 
 export const subscriptionService = {
-    getAll: async(): Promise<Subscription[]> => {
+    getAll: async (): Promise<Subscription[]> => {
         const { data } = await api.get('/subscriptions');
-        return data;
+        return data.data;
 
     },
 
-    getById: async(id: number): Promise<Subscription> => {
+    getById: async (id: number): Promise<Subscription> => {
         const { data } = await api.get(`/subscriptions/${id}`);
-        return data;
+        return data.data;
 
     },
 
-    create: async(credentials: CreateSubscriptionRequest): Promise<Subscription> => {
+    create: async (credentials: CreateSubscriptionRequest): Promise<Subscription> => {
         const { data } = await api.post('/subscriptions', credentials);
-        return data;
+        return data.data;
 
     },
 
     update: async (id: number, credentials: UpdateSubscriptionRequest): Promise<Subscription> => {
         const { data } = await api.put(`/subscriptions/${id}`, credentials);
-        return data;
+        return data.data;
 
     },
 

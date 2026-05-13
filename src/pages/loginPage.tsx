@@ -3,7 +3,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { useAuthStore } from "@/stores/useAuthStore";
 
 export default function LoginPage() {
-    const [email, setEmail] = useState('');
+    const [username, setUsername] = useState('');
 
     const [password, setPassword] = useState('');
     const { login, isLoading } = useAuthStore();
@@ -12,7 +12,7 @@ export default function LoginPage() {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        await login({ email, password });
+        await login({ username, password });
 
         const token = useAuthStore.getState().token;
 
@@ -26,10 +26,10 @@ export default function LoginPage() {
             <h1>Đăng nhập</h1>
             <form onSubmit={handleSubmit}>
                 <input
-                    type="email"
-                    placeholder="Email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    type="text"
+                    placeholder="Username"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
                     required
                 />
 
