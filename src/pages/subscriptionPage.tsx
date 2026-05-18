@@ -3,64 +3,46 @@ import { useSubStore } from "@/stores/useSubStore";
 import type { CreateSubscriptionRequest, UpdateSubscriptionRequest } from "@/types/request";
 import type { Subscription } from "@/types/store";
 
+const statusConfig: Record<string, { label: string; badge: string; color: string }> = {
+    active:    { label: 'Đang hoạt động', badge: 'badge-success', color: '#10b981' },
+    inactive:  { label: 'Tạm dừng',       badge: 'badge-warning', color: '#f59e0b' },
+    cancelled: { label: 'Đã huỷ',          badge: 'badge-danger',  color: '#ef4444' },
+};
+
+const formatVND = (amount: number) =>
+    new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
+
+const emptyForm: CreateSubscriptionRequest = {
+    service_name: '', price: 0, billing_cycle: '', next_billing_date: '', status: 'active', notes: '',
+};
+
 export default function SubscriptionsPage() {
     const { subscriptions, getAll, isLoading, create, update, delete: deleteSub } = useSubStore();
 
-    const [showForm, setShowForm] = useState(false);
-
-    const [form, setForm] = useState<CreateSubscriptionRequest>({
-        service_name: '',
-        price: 0,
-        billing_cycle: '',
-        next_billing_date: '',
-        status: 'active',
-        notes: '',
-    });
+    const [showCreate, setShowCreate] = useState(false);
+    const [form, setForm] = useState<CreateSubscriptionRequest>({ ...emptyForm });
 
     const [editSub, setEditSub] = useState<Subscription | null>(null);
+    const [editForm, setEditForm] = useState<UpdateSubscriptionRequest>({ ...emptyForm });
 
-    const [editForm, setEditForm] = useState<UpdateSubscriptionRequest>({
-        service_name: '',
-        price: 0,
-        billing_cycle: '',
-        next_billing_date: '',
-        status: 'active',
-        notes: '',
-    });
+    useEffect(() => { getAll(); }, []);
 
-    useEffect(() => {
-        getAll();
-    }, []);
-
-    // Hàm xử lý tạo mới //
     const handleCreate = async (e: React.FormEvent) => {
         e.preventDefault();
         await create(form);
-        setShowForm(false);
-        setForm({
-            service_name: '',
-            price: 0,
-            billing_cycle: '',
-            next_billing_date: '',
-            status: 'active',
-            notes: '',
-        });
+        setShowCreate(false);
+        setForm({ ...emptyForm });
     };
 
-    // Hàm mở form sửa //
-    const handleEditClick = (sub: Subscription) => {
-        setEditSub(sub);
+    const handleEditClick = (s: Subscription) => {
+        setEditSub(s);
         setEditForm({
-            service_name: sub.service_name,
-            price: sub.price,
-            billing_cycle: sub.billing_cycle,
-            next_billing_date: sub.next_billing_date,
-            status: sub.status,
-            notes: sub.notes,
+            service_name: s.service_name, price: s.price,
+            billing_cycle: s.billing_cycle, next_billing_date: s.next_billing_date,
+            status: s.status, notes: s.notes,
         });
     };
 
-    // Hàm submit form sửa //
     const handleUpdate = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!editSub) return;
@@ -68,118 +50,154 @@ export default function SubscriptionsPage() {
         setEditSub(null);
     };
 
-    if (isLoading) {
-        return <p>Đang tải...</p>;
-    }
+    const SubForm = ({ values, onChange, onSubmit, onCancel, title }: any) => (
+        <div className="modal-overlay" onClick={onCancel}>
+            <div className="modal" style={{ maxWidth: 520 }} onClick={(e) => e.stopPropagation()}>
+                <div className="modal-header">
+                    <span className="modal-title">{title}</span>
+                    <button className="btn btn-ghost btn-sm" onClick={onCancel}>✕</button>
+                </div>
+                <form onSubmit={onSubmit}>
+                    <div className="modal-body">
+                        <div className="form-group">
+                            <label className="form-label">Tên dịch vụ *</label>
+                            <input className="input" placeholder="Netflix, Spotify..." value={values.service_name}
+                                onChange={e => onChange({ ...values, service_name: e.target.value })} required />
+                        </div>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                            <div className="form-group">
+                                <label className="form-label">Giá tiền *</label>
+                                <input className="input" type="number" placeholder="0" value={values.price}
+                                    onChange={e => onChange({ ...values, price: Number(e.target.value) })} required />
+                            </div>
+                            <div className="form-group">
+                                <label className="form-label">Chu kỳ *</label>
+                                <input className="input" placeholder="monthly, yearly..." value={values.billing_cycle}
+                                    onChange={e => onChange({ ...values, billing_cycle: e.target.value })} required />
+                            </div>
+                        </div>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                            <div className="form-group">
+                                <label className="form-label">Ngày thu tiếp theo</label>
+                                <input className="input" type="date" value={values.next_billing_date}
+                                    onChange={e => onChange({ ...values, next_billing_date: e.target.value })} />
+                            </div>
+                            <div className="form-group">
+                                <label className="form-label">Trạng thái</label>
+                                <select className="input" value={values.status}
+                                    onChange={e => onChange({ ...values, status: e.target.value })}>
+                                    <option value="active">Đang hoạt động</option>
+                                    <option value="inactive">Tạm dừng</option>
+                                    <option value="cancelled">Đã huỷ</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div className="form-group">
+                            <label className="form-label">Ghi chú</label>
+                            <textarea className="input" placeholder="Ghi chú thêm..." value={values.notes}
+                                onChange={e => onChange({ ...values, notes: e.target.value })}
+                                rows={2} style={{ resize: 'vertical' }} />
+                        </div>
+                    </div>
+                    <div className="modal-footer">
+                        <button type="button" className="btn btn-secondary" onClick={onCancel}>Huỷ</button>
+                        <button type="submit" className="btn btn-primary" disabled={isLoading}>
+                            {isLoading ? <><span className="spinner" /> Đang lưu...</> : 'Lưu'}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    );
 
     return (
-        <div>
-            <h1>Subscriptions</h1>
-            <button onClick={() => setShowForm(true)}>Tạo mới</button>
+        <div className="animate-fade">
+            <div className="page-header">
+                <div>
+                    <h1 className="page-title">💳 Subscriptions</h1>
+                    <p className="page-subtitle">{subscriptions.length} dịch vụ đăng ký</p>
+                </div>
+                <button className="btn btn-primary" onClick={() => setShowCreate(true)}>+ Thêm dịch vụ</button>
+            </div>
 
-            {/* Form tạo mới */}
-            {showForm && (
-                <form onSubmit={handleCreate}>
-                    <input
-                        placeholder="Tên dịch vụ"
-                        value={form.service_name}
-                        onChange={(e) => setForm({ ...form, service_name: e.target.value })}
-                        required
-                    />
-                    <input
-                        type="number"
-                        placeholder="Giá tiền"
-                        value={form.price}
-                        onChange={(e) => setForm({ ...form, price: Number(e.target.value) })}
-                        required
-                    />
-                    <input
-                        placeholder="Chu kỳ (monthly, yearly...)"
-                        value={form.billing_cycle}
-                        onChange={(e) => setForm({ ...form, billing_cycle: e.target.value })}
-                        required
-                    />
-                    <input
-                        type="date"
-                        placeholder="Ngày thanh toán tiếp theo"
-                        value={form.next_billing_date}
-                        onChange={(e) => setForm({ ...form, next_billing_date: e.target.value })}
-                        required
-                    />
-                    <select
-                        value={form.status}
-                        onChange={(e) => setForm({ ...form, status: e.target.value as 'active' | 'inactive' | 'cancelled' })}
-                    >
-                        <option value="active">Active</option>
-                        <option value="inactive">Inactive</option>
-                        <option value="cancelled">Cancelled</option>
-                    </select>
-                    <input
-                        placeholder="Ghi chú"
-                        value={form.notes}
-                        onChange={(e) => setForm({ ...form, notes: e.target.value })}
-                    />
-                    <button type="submit">Lưu</button>
-                    <button type="button" onClick={() => setShowForm(false)}>Huỷ</button>
-                </form>
+            {showCreate && (
+                <SubForm values={form} onChange={setForm}
+                    onSubmit={handleCreate} onCancel={() => setShowCreate(false)}
+                    title="💳 Thêm Subscription" />
             )}
 
-            {/* Form sửa */}
             {editSub && (
-                <form onSubmit={handleUpdate}>
-                    <h3>Sửa Subscription #{editSub.id}</h3>
-                    <input
-                        placeholder="Tên dịch vụ"
-                        value={editForm.service_name}
-                        onChange={(e) => setEditForm({ ...editForm, service_name: e.target.value })}
-                    />
-                    <input
-                        type="number"
-                        placeholder="Giá tiền"
-                        value={editForm.price}
-                        onChange={(e) => setEditForm({ ...editForm, price: Number(e.target.value) })}
-                    />
-                    <input
-                        placeholder="Chu kỳ"
-                        value={editForm.billing_cycle}
-                        onChange={(e) => setEditForm({ ...editForm, billing_cycle: e.target.value })}
-                    />
-                    <input
-                        type="date"
-                        placeholder="Ngày thanh toán tiếp theo"
-                        value={editForm.next_billing_date}
-                        onChange={(e) => setEditForm({ ...editForm, next_billing_date: e.target.value })}
-                    />
-                    <select
-                        value={editForm.status}
-                        onChange={(e) => setEditForm({ ...editForm, status: e.target.value as 'active' | 'inactive' | 'cancelled' })}
-                    >
-                        <option value="active">Active</option>
-                        <option value="inactive">Inactive</option>
-                        <option value="cancelled">Cancelled</option>
-                    </select>
-                    <input
-                        placeholder="Ghi chú"
-                        value={editForm.notes}
-                        onChange={(e) => setEditForm({ ...editForm, notes: e.target.value })}
-                    />
-                    <button type="submit">Lưu thay đổi</button>
-                    <button type="button" onClick={() => setEditSub(null)}>Huỷ</button>
-                </form>
+                <SubForm values={editForm} onChange={setEditForm}
+                    onSubmit={handleUpdate} onCancel={() => setEditSub(null)}
+                    title={`✏️ Sửa ${editSub.service_name}`} />
             )}
 
-            {/* Danh sách */}
-            <ul>
-                {subscriptions.map((s) => (
-                    <li key={s.id}>
-                        <strong>{s.service_name}</strong> — {s.price.toLocaleString('vi-VN')}đ
-                        <p>Chu kỳ: {s.billing_cycle} | Ngày thu: {s.next_billing_date}</p>
-                        <p>Trạng thái: {s.status}</p>
-                        <button onClick={() => handleEditClick(s)}>Sửa</button>
-                        <button onClick={() => deleteSub(s.id)}>Xoá</button>
-                    </li>
-                ))}
-            </ul>
+            {isLoading && subscriptions.length === 0 ? (
+                <div className="loading-screen" style={{ height: 300 }}>
+                    <span className="spinner" style={{ width: 32, height: 32, borderWidth: 3 }} />
+                    <p>Đang tải...</p>
+                </div>
+            ) : subscriptions.length === 0 ? (
+                <div className="empty-state">
+                    <span className="empty-icon">💳</span>
+                    <h3>Chưa có subscription nào</h3>
+                    <p>Bấm "Thêm dịch vụ" để theo dõi chi phí đăng ký.</p>
+                </div>
+            ) : (
+                <div className="grid-2">
+                    {subscriptions.map((s) => {
+                        const sc = statusConfig[s.status] ?? statusConfig['active'];
+                        return (
+                            <div key={s.id} className="card animate-slide">
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                                        <div style={{
+                                            width: 40, height: 40, borderRadius: 10,
+                                            background: `linear-gradient(135deg, ${sc.color}33, ${sc.color}11)`,
+                                            border: `1px solid ${sc.color}44`,
+                                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                            fontSize: '1.2rem',
+                                        }}>💳</div>
+                                        <div>
+                                            <h3 style={{ fontSize: '1rem', marginBottom: 2 }}>{s.service_name}</h3>
+                                            <span className={`badge ${sc.badge}`} style={{ fontSize: '0.7rem' }}>{sc.label}</span>
+                                        </div>
+                                    </div>
+                                    <div style={{ textAlign: 'right' }}>
+                                        <div style={{ fontSize: '1.1rem', fontWeight: 700, color: sc.color }}>
+                                            {formatVND(s.price)}
+                                        </div>
+                                        <div style={{ fontSize: '0.72rem', color: 'var(--text)' }}>{s.billing_cycle}</div>
+                                    </div>
+                                </div>
+
+                                {s.next_billing_date && (
+                                    <div style={{
+                                        background: 'var(--bg-2)', borderRadius: 8, padding: '8px 12px',
+                                        marginBottom: 12, fontSize: '0.8rem', color: 'var(--text-2)',
+                                        display: 'flex', alignItems: 'center', gap: 6,
+                                    }}>
+                                        📅 Thanh toán tiếp theo: <strong>{s.next_billing_date}</strong>
+                                    </div>
+                                )}
+
+                                {s.notes && (
+                                    <p style={{ fontSize: '0.8rem', color: 'var(--text)', marginBottom: 10,
+                                        display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                                        {s.notes}
+                                    </p>
+                                )}
+
+                                <div className="divider" />
+                                <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+                                    <button className="btn btn-ghost btn-sm" onClick={() => handleEditClick(s)}>✏️ Sửa</button>
+                                    <button className="btn btn-danger btn-sm" onClick={() => deleteSub(s.id)}>🗑️ Xoá</button>
+                                </div>
+                            </div>
+                        );
+                    })}
+                </div>
+            )}
         </div>
     );
 }

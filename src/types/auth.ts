@@ -3,6 +3,7 @@ export interface User {
   name: string,
   email: string,
   displayName: string,
+  username: string,
   createdAt?: string,
   updatedAt?: string
 
