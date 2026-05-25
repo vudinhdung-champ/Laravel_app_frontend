@@ -1,25 +1,56 @@
 import { create } from 'zustand';
-import type { PromiseState, PromiseItem } from '@/types/store';
+import type { PromiseState, PromiseItem, Pagination } from '@/types/store';
 import type { CreatePromiseRequest, UpdatePromiseRequest } from '@/types/request';
 import { promiseService } from '@/services/promiseService';
+import type { PromiseFilters } from '@/services/promiseService';
 import toast from 'react-hot-toast';
 
-export const usePromiseStore = create<PromiseState>()((set) => ({
+const DEFAULT_FILTERS: PromiseFilters = { search: '', status: '', page: 1, per_page: 6 };
+
+
+export const usePromiseStore = create<PromiseState>()((set, get) => ({
     promises: [],
     currentPromise: null,
     isLoading: false,
     error: null,
+    filters: { ...DEFAULT_FILTERS },
+    pagination: { page: 1, lastPage: 1, total: 0 } as Pagination,
 
-    getAll: async () => {
+    getAll: async (params) => {
+        const merged = { ...get().filters, ...params };
         set({ isLoading: true, error: null });
         try {
-            const promises = await promiseService.getAll();
-            set({ promises });
+            const { data, meta } = await promiseService.getAll(merged);
+            set({
+                promises: data,
+                pagination: {
+                    page: meta?.current_page ?? 1,
+                    lastPage: meta?.last_page ?? 1,
+                    total: meta?.total ?? data.length,
+                }
+            });
         } catch (error) {
             set({ error: 'Không thể tải danh sách promise' });
         } finally {
             set({ isLoading: false });
         }
+    },
+
+    setFilter: (key, value) => {
+        const newFilters = { ...get().filters, [key]: value, page: 1 };
+        set({ filters: newFilters });
+        get().getAll(newFilters);
+    },
+
+    resetFilters: () => {
+        set({ filters: { ...DEFAULT_FILTERS } });
+        get().getAll({ ...DEFAULT_FILTERS });
+    },
+
+    setPage: (page) => {
+        const newFilters = { ...get().filters, page };
+        set({ filters: newFilters });
+        get().getAll(newFilters);
     },
 
     getById: async (id: number) => {

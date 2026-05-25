@@ -2,10 +2,19 @@ import api from '@/lib/axios.ts';
 import type { Notebook } from '@/types/store.ts';
 import type { CreateNotebookRequest, UpdateNotebookRequest } from '@/types/request';
 
+
+export interface NotebookFilters {
+    search?: string;
+    category?: string;
+    page?: number;
+    per_page?: number;
+}
+
+
 export const notebookService = {
-    getAll: async (): Promise<Notebook[]> => {
-        const { data } = await api.get('/notebooks');
-        return data.data;
+    getAll: async (params?: NotebookFilters): Promise<{data: Notebook[]; meta: any}> => {
+        const { data } = await api.get('/notebooks', {params});
+        return {data: data.data, meta: data.meta};
     },
 
     getById: async (id: number): Promise<Notebook> => {

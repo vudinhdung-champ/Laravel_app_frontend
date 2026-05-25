@@ -1,25 +1,56 @@
 import { create } from 'zustand';
-import type { SubscriptionState, Subscription } from '@/types/store';
+import type { SubscriptionState, Subscription, Pagination } from '@/types/store';
 import type { CreateSubscriptionRequest, UpdateSubscriptionRequest } from '@/types/request';
 import { subscriptionService } from '@/services/subscriptionService';
+import type { SubscriptionFilters } from '@/services/subscriptionService';
 import toast from 'react-hot-toast';
 
-export const useSubStore = create<SubscriptionState>()((set) => ({
+const DEFAULT_FILTERS: SubscriptionFilters = { search: '', status: '', page: 1, per_page: 6 };
+
+
+export const useSubStore = create<SubscriptionState>()((set, get) => ({
     subscriptions: [],
     currentSubscription: null,
     isLoading: false,
     error: null,
+    filters: { ...DEFAULT_FILTERS },
+    pagination: { page: 1, lastPage: 1, total: 0 } as Pagination,
 
-    getAll: async () => {
+    getAll: async (params) => {
+        const merged = { ...get().filters, ...params };
         set({ isLoading: true, error: null });
         try {
-            const subscriptions = await subscriptionService.getAll();
-            set({ subscriptions });
+            const { data, meta } = await subscriptionService.getAll(merged);
+            set({
+                subscriptions: data,
+                pagination: {
+                    page: meta?.current_page ?? 1,
+                    lastPage: meta?.last_page ?? 1,
+                    total: meta?.total ?? data.length,
+                }
+            });
         } catch (error) {
             set({ error: 'Không thể tải danh sách subscription' });
         } finally {
             set({ isLoading: false });
         }
+    },
+
+    setFilter: (key, value) => {
+        const newFilters = { ...get().filters, [key]: value, page: 1 };
+        set({ filters: newFilters });
+        get().getAll(newFilters);
+    },
+
+    resetFilters: () => {
+        set({ filters: { ...DEFAULT_FILTERS } });
+        get().getAll({ ...DEFAULT_FILTERS });
+    },
+
+    setPage: (page) => {
+        const newFilters = { ...get().filters, page };
+        set({ filters: newFilters });
+        get().getAll(newFilters);
     },
 
     getById: async (id: number) => {
@@ -47,7 +78,7 @@ export const useSubStore = create<SubscriptionState>()((set) => ({
             set({ isLoading: false });
         }
     },
-    
+
     update: async (id: number, data: UpdateSubscriptionRequest) => {
         set({ isLoading: true, error: null });
         try {
@@ -80,4 +111,7 @@ export const useSubStore = create<SubscriptionState>()((set) => ({
             set({ isLoading: false });
         }
     },
+
 }));
+
+

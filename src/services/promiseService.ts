@@ -3,10 +3,19 @@ import type { PromiseItem } from '@/types/store.ts';
 import type { CreatePromiseRequest, UpdatePromiseRequest } from '@/types/request.ts';
 
 
+export interface PromiseFilters {
+    search?: string;
+    status?: string;
+    importanceLevel?: number;
+    page?: number;
+    per_page?: number;
+}
+
+
 export const promiseService = {
-    getAll: async (): Promise<PromiseItem[]> => {
-        const { data } = await api.get('/promises');
-        return data.data;
+    getAll: async (params?: PromiseFilters): Promise<{data: PromiseItem[]; meta: any}> => {
+        const { data } = await api.get('/promises', {params});
+        return {data: data.data, meta: data.meta};
 
     },
 

@@ -3,10 +3,19 @@ import type { Subscription } from '@/types/store.ts';
 import type { CreateSubscriptionRequest, UpdateSubscriptionRequest } from '@/types/request.ts';
 
 
+export interface SubscriptionFilters {
+    search?: string;
+    status?: string;
+    billingCycle?: number;
+    page?: number;
+    per_page?: number;
+}
+
+
 export const subscriptionService = {
-    getAll: async (): Promise<Subscription[]> => {
-        const { data } = await api.get('/subscriptions');
-        return data.data;
+    getAll: async (params?: SubscriptionFilters): Promise<{data: Subscription[]; meta: any}> => {
+        const { data } = await api.get('/subscriptions', {params});
+        return {data: data.data, meta: data.meta};
 
     },
 

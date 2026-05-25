@@ -1,3 +1,9 @@
+import { PromiseStatus, SubscriptionStatus } from './constants.ts';
+
+
+type PromiseStatusType = typeof PromiseStatus[keyof typeof PromiseStatus];
+
+type SubscriptionStatusType = typeof SubscriptionStatus[keyof typeof SubscriptionStatus];
 // Notebook requests //
 export interface CreateNotebookRequest {
   title: string;
@@ -14,40 +20,40 @@ export interface UpdateNotebookRequest {
 // Promise request //
 
 export interface CreatePromiseRequest {
-  promiser_name: string;
-  promise_content: string;
-  date_made: string;
-  status: 'pending' | 'completed' | 'cancelled';
+  promiserName: string;
+  promiseContent: string;
+  dateMade: string;
+  status: PromiseStatusType;
   deadline?: string;
-  importance_level: number;
+  importanceLevel: number;
 }
 
 export interface UpdatePromiseRequest {
-  promiser_name?: string;
-  promise_content?: string;
-  date_made?: string;
-  status?: 'pending' | 'completed' | 'cancelled';
+  promiserName?: string;
+  promiseContent?: string;
+  dateMade?: string;
+  status?: PromiseStatusType;
   deadline?: string;
-  importance_level?: number;
+  importanceLevel?: number;
 }
 
 // Subscription request // 
 
 export interface CreateSubscriptionRequest {
-  service_name: string;
+  serviceName: string;
   price: number;
-  status: 'active' | 'inactive' | 'cancelled';
-  billing_cycle: string;
-  next_billing_date: string;
+  status: SubscriptionStatusType;
+  billingCycle: string;
+  nextBillingDate: string;
   notes: string;
 }
 
 export interface UpdateSubscriptionRequest {
-  service_name?: string;
+  serviceName?: string;
   price?: number;
-  status?: 'active' | 'inactive' | 'cancelled';
-  billing_cycle?: string;
-  next_billing_date?: string;
+  status?: SubscriptionStatusType;
+  billingCycle?: string;
+  nextBillingDate?: string;
   notes?: string;
 }
 

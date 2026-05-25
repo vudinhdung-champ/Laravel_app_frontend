@@ -1,6 +1,14 @@
 import { type ChangePasswordRequest, type LoginRequest, type RegisterRequest, type ResetPasswordRequest, type User } from './auth.ts';
 import type { CreateNotebookRequest, UpdateNotebookRequest, CreatePromiseRequest, UpdatePromiseRequest, CreateSubscriptionRequest, UpdateSubscriptionRequest } from './request.ts';
+import { SubscriptionStatus, PromiseStatus } from './constants.ts';
+import type { NotebookFilters } from '@/services/notebookService.ts';
+import type { PromiseFilters } from '@/services/promiseService.ts';
+import type { SubscriptionFilters } from '@/services/subscriptionService.ts';
 
+
+type PromiseStatusType = typeof PromiseStatus[keyof typeof PromiseStatus];
+
+type SubscriptionStatusType = typeof SubscriptionStatus[keyof typeof SubscriptionStatus];
 
 export interface Notebook {
     id: number;
@@ -14,14 +22,14 @@ export interface Notebook {
 export interface Subscription {
     id: number;
     user_id: number;
-    service_name: string;
+    serviceName: string;
     price: number;
-    status: 'active' | 'inactive' | 'cancelled';
-    billing_cycle: string,
-    next_billing_date: string,
-    alert_message: string,
-    is_red_alert: boolean,
-    color_code: string,
+    status: SubscriptionStatusType,
+    billingCycle: string,
+    nextBillingDate: string,
+    alertMessage: string,
+    isRedAlert: boolean,
+    colorCode: string,
     notes: string,
 }
 
@@ -29,12 +37,12 @@ export interface Subscription {
 export interface PromiseItem {
     id: number;
     user_id: number;
-    promiser_name: string;
-    promise_content: string;
-    date_made: string;
-    status: 'pending' | 'completed' | 'cancelled';
+    promiserName: string;
+    promiseContent: string;
+    dateMade: string;
+    status: PromiseStatusType;
     deadline?: string;
-    importance_level: number;
+    importanceLevel: number;
 
 }
 
@@ -58,13 +66,24 @@ export interface AuthState {
     clearError: () => void;
 }
 
+export interface Pagination {
+    page: number;
+    lastPage: number;
+    total: number;
+}
+
 export interface NotebookState {
     notebooks: Notebook[];
     currentNotebook: Notebook | null;
     isLoading: boolean;
     error: string | null;
+    filters: NotebookFilters;
+    pagination: Pagination;
 
-    getAll: () => Promise<void>;
+    getAll: (params?: NotebookFilters) => Promise<void>;
+    setFilter: (key: keyof NotebookFilters, value: any) => void;
+    resetFilters: () => void;
+    setPage: (page: number) => void;
     getById: (id: number) => Promise<void>;
     create: (data: CreateNotebookRequest) => Promise<void>;
     update: (id: number, data: UpdateNotebookRequest) => Promise<void>;
@@ -78,8 +97,13 @@ export interface PromiseState {
     currentPromise: PromiseItem | null;
     isLoading: boolean;
     error: string | null;
+    filters: PromiseFilters;
+    pagination: Pagination;
 
-    getAll: () => Promise<void>;
+    getAll: (params?: PromiseFilters) => Promise<void>;
+    setFilter: (key: keyof PromiseFilters, value: any) => void;
+    resetFilters: () => void;
+    setPage: (page: number) => void;
     getById: (id: number) => Promise<void>;
     create: (data: CreatePromiseRequest) => Promise<void>;
     update: (id: number, data: UpdatePromiseRequest) => Promise<void>;
@@ -92,8 +116,13 @@ export interface SubscriptionState {
     currentSubscription: Subscription | null;
     isLoading: boolean;
     error: string | null;
+    filters: SubscriptionFilters;
+    pagination: Pagination;
 
-    getAll: () => Promise<void>;
+    getAll: (params?: SubscriptionFilters) => Promise<void>;
+    setFilter: (key: keyof SubscriptionFilters, value: any) => void;
+    resetFilters: () => void;
+    setPage: (page: number) => void;
     getById: (id: Number) => Promise<void>;
     create: (data: CreateSubscriptionRequest) => Promise<void>;
     update: (id: Number, data: UpdateSubscriptionRequest) => Promise<void>;
