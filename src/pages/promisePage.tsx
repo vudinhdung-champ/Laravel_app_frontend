@@ -4,7 +4,7 @@ import type { CreatePromiseRequest, UpdatePromiseRequest } from "@/types/request
 import type { PromiseItem } from "@/types/store";
 import Pagination from "@/components/Pagination";
 
-type PromiseStatus = 'pending' | 'kept' | 'broken' | 'completed' | 'cancelled';
+type PromiseStatus = 'pending' | 'completed' | 'cancelled';
 
 const statusConfig: Record<string, { label: string; badge: string }> = {
     pending: { label: 'Đang chờ', badge: 'badge-warning' },
@@ -126,7 +126,7 @@ export default function PromisesPage() {
             <div className="page-header">
                 <div>
                     <h1 className="page-title">🤝 Promises</h1>
-                    <p className="page-subtitle">{promises.length} lời hứa</p>
+                    <p className="page-subtitle">{pagination.total} lời hứa</p>
                 </div>
                 <button className="btn btn-primary" onClick={() => setShowCreate(true)}>+ Tạo mới</button>
             </div>

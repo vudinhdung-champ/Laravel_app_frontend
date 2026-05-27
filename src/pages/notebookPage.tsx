@@ -300,7 +300,7 @@ export default function NotebooksPage() {
                         </h1>
                         <p style={{ color: 'var(--text)', fontSize: '0.875rem' }}>
                             {notebooks.length > 0
-                                ? `${notebooks.length} ghi chú của bạn`
+                                ? `${pagination.total} ghi chú của bạn`
                                 : 'Chưa có ghi chú nào'}
                         </p>
                     </div>

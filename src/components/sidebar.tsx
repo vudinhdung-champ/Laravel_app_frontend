@@ -20,7 +20,7 @@ export default function Sidebar() {
     return (
         <aside style={{
             width: 'var(--sidebar-w)',
-            minHeight: '100vh',
+            height: '100vh',
             background: '#131929',
             borderRight: '1px solid var(--border)',
             display: 'flex',

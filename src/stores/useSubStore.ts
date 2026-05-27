@@ -5,7 +5,7 @@ import { subscriptionService } from '@/services/subscriptionService';
 import type { SubscriptionFilters } from '@/services/subscriptionService';
 import toast from 'react-hot-toast';
 
-const DEFAULT_FILTERS: SubscriptionFilters = { search: '', status: '', page: 1, per_page: 3 };
+const DEFAULT_FILTERS: SubscriptionFilters = { search: '', status: '', page: 1, per_page: 6 };
 
 
 export const useSubStore = create<SubscriptionState>()((set, get) => ({

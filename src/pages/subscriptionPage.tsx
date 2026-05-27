@@ -41,20 +41,24 @@ const SubForm = ({ values, onChange, onSubmit, onCancel, title, isLoading }: any
                         </div>
                         <div className="form-group">
                             <label className="form-label">Chu kỳ *</label>
-                            <input className="input" placeholder="monthly, yearly..." value={values.billingCycle}
-                                onChange={e => onChange({ ...values, billingCycle: e.target.value })} required />
+                            <select className="input" value={values.billingCycle}
+                                onChange={e => onChange({ ...values, billingCycle: e.target.value })} required>
+                                <option value="">Chọn chu kỳ</option>
+                                <option value="monthly">Hàng tháng</option>
+                                <option value="yearly">Hàng năm</option>
+                            </select>
                         </div>
                     </div>
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                         <div className="form-group">
-                            <label className="form-label">Ngày thu tiếp theo</label>
+                            <label className="form-label">Ngày thu tiếp theo *</label>
                             <input className="input" type="date" value={values.nextBillingDate}
-                                onChange={e => onChange({ ...values, nextBillingDate: e.target.value })} />
+                                onChange={e => onChange({ ...values, nextBillingDate: e.target.value })} required />
                         </div>
                         <div className="form-group">
-                            <label className="form-label">Trạng thái</label>
+                            <label className="form-label">Trạng thái *</label>
                             <select className="input" value={values.status}
-                                onChange={e => onChange({ ...values, status: e.target.value })}>
+                                onChange={e => onChange({ ...values, status: e.target.value })} required>
                                 <option value="active">Đang hoạt động</option>
                                 <option value="inactive">Tạm dừng</option>
                                 <option value="cancelled">Đã huỷ</option>
@@ -283,6 +287,9 @@ export default function SubscriptionsPage() {
                         {/* Vòng xoay khi đang cuộn tải thêm */}
                         {isFetchingNextPage && (
                             <div className="grid-2" style={{ width: '100%', marginTop: 16 }}>
+                                <SubSkeletonCard />
+                                <SubSkeletonCard />
+                                <SubSkeletonCard />
                                 <SubSkeletonCard />
                                 <SubSkeletonCard />
                                 <SubSkeletonCard />
