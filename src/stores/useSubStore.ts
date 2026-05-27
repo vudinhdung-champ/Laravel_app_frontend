@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { SubscriptionState, Subscription, Pagination } from '@/types/store';
+import type { SubscriptionState, Pagination } from '@/types/store';
 import type { CreateSubscriptionRequest, UpdateSubscriptionRequest } from '@/types/request';
 import { subscriptionService } from '@/services/subscriptionService';
 import type { SubscriptionFilters } from '@/services/subscriptionService';
@@ -15,19 +15,23 @@ export const useSubStore = create<SubscriptionState>()((set, get) => ({
     error: null,
     filters: { ...DEFAULT_FILTERS },
     pagination: { page: 1, lastPage: 1, total: 0 } as Pagination,
+    totalMonthly: 0,
+    totalYearly: 0,
 
     getAll: async (params) => {
         const merged = { ...get().filters, ...params };
         set({ isLoading: true, error: null });
         try {
-            const { data, meta } = await subscriptionService.getAll(merged);
+            const { data, meta, totalCost } = await subscriptionService.getAll(merged);
             set({
                 subscriptions: data,
                 pagination: {
                     page: meta?.current_page ?? 1,
                     lastPage: meta?.last_page ?? 1,
                     total: meta?.total ?? data.length,
-                }
+                },
+                totalMonthly: totalCost.totalMonthly ?? 0,
+                totalYearly: totalCost.totalYearly ?? 0,
             });
         } catch (error) {
             set({ error: 'Không thể tải danh sách subscription' });
@@ -68,8 +72,8 @@ export const useSubStore = create<SubscriptionState>()((set, get) => ({
     create: async (data: CreateSubscriptionRequest) => {
         set({ isLoading: true, error: null });
         try {
-            const subscription = await subscriptionService.create(data);
-            set((state) => ({ subscriptions: [subscription, ...state.subscriptions] }));
+            await subscriptionService.create(data);
+            get().setPage(1);
             toast.success('Tạo subscription thành công!');
         } catch (error) {
             set({ error: 'Tạo subscription thất bại' });
@@ -82,11 +86,8 @@ export const useSubStore = create<SubscriptionState>()((set, get) => ({
     update: async (id: number, data: UpdateSubscriptionRequest) => {
         set({ isLoading: true, error: null });
         try {
-            const updated = await subscriptionService.update(id, data);
-            set((state) => ({
-                subscriptions: state.subscriptions.map((s) => (s.id === id ? updated : s)),
-                currentSubscription: updated,
-            }));
+            await subscriptionService.update(id, data);
+            get().getAll();
             toast.success('Cập nhật thành công!');
         } catch (error) {
             set({ error: 'Cập nhật subscription thất bại' });
@@ -100,9 +101,7 @@ export const useSubStore = create<SubscriptionState>()((set, get) => ({
         set({ isLoading: true, error: null });
         try {
             await subscriptionService.delete(id);
-            set((state) => ({
-                subscriptions: state.subscriptions.filter((s) => s.id !== id),
-            }));
+            get().getAll();
             toast.success('Xoá thành công!');
         } catch (error) {
             set({ error: 'Xoá subscription thất bại' });

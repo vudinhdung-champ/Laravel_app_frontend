@@ -84,7 +84,7 @@ export interface NotebookState {
     setFilter: (key: keyof NotebookFilters, value: any) => void;
     resetFilters: () => void;
     setPage: (page: number) => void;
-    getById: (id: number) => Promise<void>;
+    getById: (id: number) => Promise<Notebook | null>;
     create: (data: CreateNotebookRequest) => Promise<void>;
     update: (id: number, data: UpdateNotebookRequest) => Promise<void>;
     delete: (id: number) => Promise<void>;
@@ -118,6 +118,8 @@ export interface SubscriptionState {
     error: string | null;
     filters: SubscriptionFilters;
     pagination: Pagination;
+    totalMonthly: number;
+    totalYearly: number;
 
     getAll: (params?: SubscriptionFilters) => Promise<void>;
     setFilter: (key: keyof SubscriptionFilters, value: any) => void;

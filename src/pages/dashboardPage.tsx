@@ -7,15 +7,15 @@ import { Link } from 'react-router-dom';
 
 const stats = [
     { label: 'Notebooks', emoji: '📓', to: '/notebooks', color: '#7c3aed', bg: 'rgba(124,58,237,0.12)', border: 'rgba(124,58,237,0.25)', storeKey: 'notebooks' },
-    { label: 'Promises',  emoji: '🤝', to: '/promises',  color: '#10b981', bg: 'rgba(16,185,129,0.12)', border: 'rgba(16,185,129,0.25)', storeKey: 'promises' },
+    { label: 'Promises', emoji: '🤝', to: '/promises', color: '#10b981', bg: 'rgba(16,185,129,0.12)', border: 'rgba(16,185,129,0.25)', storeKey: 'promises' },
     { label: 'Subscriptions', emoji: '💳', to: '/subscriptions', color: '#3b82f6', bg: 'rgba(59,130,246,0.12)', border: 'rgba(59,130,246,0.25)', storeKey: 'subscriptions' },
 ];
 
 export default function DashboardPage() {
     const user = useAuthStore((s) => s.user);
-    const notebooks = useNotebookStore((s) => s.notebooks);
-    const promises  = usePromiseStore((s) => s.promises);
-    const subscriptions = useSubStore((s) => s.subscriptions);
+    const Subnotebooks = useNotebookStore((s) => s.pagination);
+    const Subpromises = usePromiseStore((s) => s.pagination);
+    const Subpagination = useSubStore((s) => s.pagination);
 
     const { getAll: getNB } = useNotebookStore();
     const { getAll: getPR } = usePromiseStore();
@@ -24,9 +24,9 @@ export default function DashboardPage() {
     useEffect(() => { getNB(); getPR(); getSB(); }, []);
 
     const counts: Record<string, number> = {
-        notebooks: notebooks.length,
-        promises: promises.length,
-        subscriptions: subscriptions.length,
+        notebooks: Subnotebooks.total,
+        promises: Subpromises.total,
+        subscriptions: Subpagination.total,
     };
 
     const hour = new Date().getHours();

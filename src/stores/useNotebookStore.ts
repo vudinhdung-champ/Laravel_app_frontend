@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { NotebookState, Notebook, Pagination } from '@/types/store';
+import type { NotebookState, Pagination } from '@/types/store';
 import type { CreateNotebookRequest, UpdateNotebookRequest } from '@/types/request';
 import { notebookService } from '@/services/notebookService';
 import type { NotebookFilters } from '@/services/notebookService';
@@ -59,8 +59,9 @@ export const useNotebookStore = create<NotebookState>()((set, get) => ({
         set({ isLoading: true, error: null });
         try {
             const notebook = await notebookService.getById(id);
-            set({ currentNotebook: notebook });
+            return notebook;
         } catch (error) {
+            console.log("CHI TIẾT LỖI: ", error.response?.data);
             set({ error: 'Không thể tải notebook' });
         } finally {
             set({ isLoading: false });
@@ -70,8 +71,8 @@ export const useNotebookStore = create<NotebookState>()((set, get) => ({
     create: async (data: CreateNotebookRequest) => {
         set({ isLoading: true, error: null });
         try {
-            const notebook = await notebookService.create(data);
-            set((state) => ({ notebooks: [notebook, ...state.notebooks] }));
+            await notebookService.create(data);
+            get().setPage(1);
             toast.success('Tạo notebook thành công!');
         } catch (error) {
             set({ error: 'Tạo notebook thất bại' });
@@ -84,11 +85,8 @@ export const useNotebookStore = create<NotebookState>()((set, get) => ({
     update: async (id: number, data: UpdateNotebookRequest) => {
         set({ isLoading: true, error: null });
         try {
-            const updated = await notebookService.update(id, data);
-            set((state) => ({
-                notebooks: state.notebooks.map((n) => (n.id === id ? updated : n)),
-                currentNotebook: updated,
-            }));
+            await notebookService.update(id, data);
+            get().getAll();
             toast.success('Cập nhật thành công!');
         } catch (error) {
             set({ error: 'Cập nhật notebook thất bại' });
@@ -102,9 +100,7 @@ export const useNotebookStore = create<NotebookState>()((set, get) => ({
         set({ isLoading: true, error: null });
         try {
             await notebookService.delete(id);
-            set((state) => ({
-                notebooks: state.notebooks.filter((n) => n.id !== id),
-            }));
+            get().getAll();
             toast.success('Xoá thành công!');
         } catch (error) {
             set({ error: 'Xoá notebook thất bại' });

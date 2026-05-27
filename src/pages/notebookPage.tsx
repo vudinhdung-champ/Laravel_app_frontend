@@ -17,25 +17,29 @@ function NoteCard({
     note,
     onEdit,
     onDelete,
+    onView, // ✅ Đã thêm prop onView
 }: {
     note: Notebook;
     onEdit: (n: Notebook) => void;
     onDelete: (id: number) => void;
+    onView: (n: Notebook) => void; // ✅ Khai báo type
 }) {
     const style = getCategoryStyle(note.category);
     return (
-        <div style={{
-            background: 'var(--surface)',
-            border: '1px solid var(--border)',
-            borderRadius: 16,
-            padding: '20px',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: 10,
-            backdropFilter: 'blur(12px)',
-            transition: 'transform 0.18s, box-shadow 0.18s, border-color 0.18s',
-            cursor: 'default',
-        }}
+        <div
+            onClick={() => onView(note)} // ✅ Bấm vào Card để xem chi tiết
+            style={{
+                background: 'var(--surface)',
+                border: '1px solid var(--border)',
+                borderRadius: 16,
+                padding: '20px',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 10,
+                backdropFilter: 'blur(12px)',
+                transition: 'transform 0.18s, box-shadow 0.18s, border-color 0.18s',
+                cursor: 'pointer', // ✅ Đổi thành pointer để báo hiệu có thể click
+            }}
             onMouseEnter={e => {
                 const el = e.currentTarget as HTMLElement;
                 el.style.transform = 'translateY(-3px)';
@@ -103,14 +107,66 @@ function NoteCard({
                 borderTop: '1px solid var(--border)',
                 marginTop: 4,
             }}>
-                <button className="btn btn-ghost btn-sm" onClick={() => onEdit(note)}
+                {/* ✅ Thêm e.stopPropagation() để chặn click lan ra Card */}
+                <button className="btn btn-ghost btn-sm"
+                    onClick={(e) => { e.stopPropagation(); onEdit(note); }}
                     style={{ fontSize: '0.78rem' }}>
                     ✏️ Sửa
                 </button>
-                <button className="btn btn-danger btn-sm" onClick={() => onDelete(note.id)}
+                <button className="btn btn-danger btn-sm"
+                    onClick={(e) => { e.stopPropagation(); onDelete(note.id); }}
                     style={{ fontSize: '0.78rem' }}>
                     🗑️ Xoá
                 </button>
+            </div>
+        </div>
+    );
+}
+
+// ─── Note View Modal (Chỉ để xem) ─────────────────────
+function NoteViewModal({
+    note,
+    onClose,
+}: {
+    note: Notebook;
+    onClose: () => void;
+}) {
+    const style = getCategoryStyle(note.category);
+    return (
+        <div className="modal-overlay" onClick={onClose}>
+            <div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: 600 }}>
+                <div className="modal-header" style={{ paddingBottom: 16 }}>
+                    <h2 style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--text-h)', margin: 0 }}>
+                        {note.title}
+                    </h2>
+                    <button className="btn btn-ghost btn-sm" onClick={onClose}>✕</button>
+                </div>
+
+                <div className="modal-body" style={{ maxHeight: '70vh', overflowY: 'auto' }}>
+                    <div style={{ marginBottom: 20, display: 'flex', alignItems: 'center', gap: 12 }}>
+                        <span style={{
+                            display: 'inline-flex', alignItems: 'center', gap: 5,
+                            background: style.bg, color: style.text,
+                            padding: '4px 12px', borderRadius: 999,
+                            fontSize: '0.75rem', fontWeight: 600,
+                        }}>
+                            <span style={{ width: 6, height: 6, borderRadius: '50%', background: style.dot, display: 'inline-block' }} />
+                            {note.category}
+                        </span>
+                        <span style={{ fontSize: '0.8rem', color: 'var(--text)' }}>
+                            ⏳ Tạo lúc: {note.createdAt}
+                        </span>
+                    </div>
+
+                    <div style={{
+                        fontSize: '0.95rem',
+                        color: 'var(--text)',
+                        lineHeight: 1.8,
+                        whiteSpace: 'pre-wrap' // Giữ nguyên khoảng trắng và xuống dòng
+                    }}>
+                        {note.content}
+                    </div>
+                </div>
             </div>
         </div>
     );
@@ -150,10 +206,17 @@ function NoteFormModal({
                         </div>
                         <div className="form-group">
                             <label className="form-label">Thể loại *</label>
-                            <input className="input" placeholder="Học tập, Công việc, Cá nhân..."
+                            <select
+                                className="input"
                                 value={values.category}
                                 onChange={e => onChange({ ...values, category: e.target.value })}
-                                required />
+                                required
+                            >
+                                <option value="" disabled hidden>-- Chọn thể loại --</option>
+                                <option value="Công việc">Công việc</option>
+                                <option value="Học tập">Học tập</option>
+                                <option value="Cá nhân">Cá nhân</option>
+                            </select>
                         </div>
                         <div className="form-group">
                             <label className="form-label">Nội dung *</label>
@@ -180,13 +243,17 @@ function NoteFormModal({
 
 // ─── Main Page ────────────────────────────────────────
 export default function NotebooksPage() {
-    const { notebooks, getAll, isLoading, create, update, delete: deleteNote, pagination, setPage } = useNotebookStore();
+    // ✅ Lấy thêm getById từ store ra
+    const { notebooks, getAll, isLoading, create, update, delete: deleteNote, pagination, setPage, filters, setFilter, getById } = useNotebookStore();
 
     const [showCreate, setShowCreate] = useState(false);
     const [form, setForm] = useState<CreateNotebookRequest>({ title: '', content: '', category: '' });
 
     const [editNotebook, setEditNotebook] = useState<Notebook | null>(null);
     const [editForm, setEditForm] = useState<UpdateNotebookRequest>({ title: '', content: '', category: '' });
+
+    // ✅ State lưu ghi chú đang xem
+    const [viewNotebook, setViewNotebook] = useState<Notebook | null>(null);
 
     useEffect(() => { getAll(); }, []);
 
@@ -197,9 +264,21 @@ export default function NotebooksPage() {
         setForm({ title: '', content: '', category: '' });
     };
 
-    const handleEditClick = (n: Notebook) => {
-        setEditNotebook(n);
-        setEditForm({ title: n.title, content: n.content, category: n.category });
+    // ✅ Sửa lại hàm Edit: Gọi API lấy full data
+    const handleEditClick = async (n: Notebook) => {
+        const fullNote = await getById(n.id);
+        if (fullNote) {
+            setEditNotebook(fullNote);
+            setEditForm({ title: fullNote.title, content: fullNote.content, category: fullNote.category });
+        }
+    };
+
+    // ✅ Hàm View: Gọi API lấy full data
+    const handleViewClick = async (n: Notebook) => {
+        const fullNote = await getById(n.id);
+        if (fullNote) {
+            setViewNotebook(fullNote);
+        }
     };
 
     const handleUpdate = async (e: React.FormEvent) => {
@@ -230,15 +309,46 @@ export default function NotebooksPage() {
                     </button>
                 </div>
 
-                {/* Divider dưới header */}
                 <div style={{
                     marginTop: 20,
                     height: 1,
                     background: 'linear-gradient(90deg, rgba(124,58,237,0.4), transparent)',
+                    marginBottom: 20,
                 }} />
+
+                {/* ── Filter Bar ── */}
+                <div className="filter-bar">
+                    <input
+                        type="text"
+                        className="input"
+                        placeholder="🔍 Tìm kiếm tiêu đề..."
+                        value={filters.search || ''}
+                        onChange={(e) => setFilter('search', e.target.value)}
+                        style={{ flex: 1, minWidth: 200 }}
+                    />
+                    <select
+                        className="input"
+                        value={filters.category || ''}
+                        onChange={(e) => setFilter('category', e.target.value)}
+                        style={{ width: 180 }}
+                    >
+                        <option value="">Tất cả danh mục</option>
+                        <option value="Công việc">Công việc</option>
+                        <option value="Học tập">Học tập</option>
+                        <option value="Cá nhân">Cá nhân</option>
+                    </select>
+                </div>
             </div>
 
             {/* ── Modals ── */}
+            {/* ✅ Modal Xem chi tiết */}
+            {viewNotebook && (
+                <NoteViewModal
+                    note={viewNotebook}
+                    onClose={() => setViewNotebook(null)}
+                />
+            )}
+
             {showCreate && (
                 <NoteFormModal
                     title="✏️ Ghi chú mới"
@@ -290,6 +400,7 @@ export default function NotebooksPage() {
                                 note={n}
                                 onEdit={handleEditClick}
                                 onDelete={deleteNote}
+                                onView={handleViewClick} // ✅ Truyền hàm onView vào Card
                             />
                         ))}
                     </div>

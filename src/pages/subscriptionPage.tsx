@@ -10,14 +10,14 @@ const statusConfig: Record<string, { label: string; badge: string; color: string
     cancelled: { label: 'Đã huỷ', badge: 'badge-danger', color: '#ef4444' },
 };
 
-const formatVND = (amount: number) =>
-    new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
+const formatThousandVND = (amount: number) =>
+    Math.round(amount).toLocaleString('vi-VN') + '.000đ';
 
 const emptyForm: CreateSubscriptionRequest = {
     serviceName: '', price: 0, billingCycle: '', nextBillingDate: '', status: 'active', notes: '',
 };
 
-// ✅ Thêm isLoading vào props
+
 const SubForm = ({ values, onChange, onSubmit, onCancel, title, isLoading }: any) => (
     <div className="modal-overlay" onClick={onCancel}>
         <div className="modal" style={{ maxWidth: 520 }} onClick={(e) => e.stopPropagation()}>
@@ -34,8 +34,8 @@ const SubForm = ({ values, onChange, onSubmit, onCancel, title, isLoading }: any
                     </div>
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                         <div className="form-group">
-                            <label className="form-label">Giá tiền *</label>
-                            <input className="input" type="number" placeholder="0" value={values.price}
+                            <label className="form-label">Giá tiền (đơn vị nghìn đồng) *</label>
+                            <input className="input" type="number" placeholder="0.000đ" value={values.price}
                                 onChange={e => onChange({ ...values, price: Number(e.target.value) })} required />
                         </div>
                         <div className="form-group">
@@ -79,7 +79,11 @@ const SubForm = ({ values, onChange, onSubmit, onCancel, title, isLoading }: any
 );
 
 export default function SubscriptionsPage() {
-    const { subscriptions, getAll, isLoading, create, update, delete: deleteSub, pagination, setPage } = useSubStore();
+    const {
+        subscriptions, getAll, isLoading, create, update, delete: deleteSub,
+        pagination, setPage, filters, setFilter,
+        totalMonthly, totalYearly
+    } = useSubStore();
 
     const [showCreate, setShowCreate] = useState(false);
     const [form, setForm] = useState<CreateSubscriptionRequest>({ ...emptyForm });
@@ -114,23 +118,75 @@ export default function SubscriptionsPage() {
 
     return (
         <div className="animate-fade">
-            <div className="page-header">
+            <div className="page-header" style={{ marginBottom: 20 }}>
                 <div>
                     <h1 className="page-title">💳 Subscriptions</h1>
-                    <p className="page-subtitle">{subscriptions.length} dịch vụ đăng ký</p>
+                    <p className="page-subtitle">{pagination.total} dịch vụ đăng ký</p>
                 </div>
                 <button className="btn btn-primary" onClick={() => setShowCreate(true)}>+ Thêm dịch vụ</button>
             </div>
 
+            <div style={{
+                display: 'flex', gap: 16, marginBottom: 24,
+                background: 'var(--surface)', padding: 16,
+                borderRadius: 16, border: '1px solid var(--border)'
+            }}>
+                <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: '0.85rem', color: 'var(--text)', marginBottom: 4 }}>Tổng chi phí (Tháng)</div>
+                    <div style={{ fontSize: '1.5rem', fontWeight: 700, color: '#ef4444' }}>
+                        {formatThousandVND(totalMonthly)}
+                    </div>
+                </div>
+                <div style={{ width: 1, background: 'var(--border)' }} />
+                <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: '0.85rem', color: 'var(--text)', marginBottom: 4 }}>Tổng chi phí (Năm)</div>
+                    <div style={{ fontSize: '1.5rem', fontWeight: 700, color: '#f59e0b' }}>
+                        {formatThousandVND(totalYearly)}
+                    </div>
+                </div>
+            </div>
+
+            {/* ── Filter Bar ── */}
+            <div className="filter-bar">
+                <input
+                    type="text"
+                    className="input"
+                    placeholder="🔍 Tìm kiếm dịch vụ..."
+                    value={filters.search || ''}
+                    onChange={(e) => setFilter('search', e.target.value)}
+                    style={{ flex: 1, minWidth: 200 }}
+                />
+                <select
+                    className="input"
+                    value={filters.status || ''}
+                    onChange={(e) => setFilter('status', e.target.value)}
+                    style={{ width: 160 }}
+                >
+                    <option value="">Tất cả trạng thái</option>
+                    <option value="active">Đang hoạt động</option>
+                    <option value="inactive">Tạm dừng</option>
+                    <option value="cancelled">Đã huỷ</option>
+                </select>
+                <select
+                    className="input"
+                    value={filters.billing_cycle || ''}
+                    onChange={(e) => setFilter('billing_cycle', e.target.value)}
+                    style={{ width: 160 }}
+                >
+                    <option value="">Tất cả chu kỳ</option>
+                    <option value="monthly">Hàng tháng</option>
+                    <option value="yearly">Hàng năm</option>
+                    <option value="weekly">Hàng tuần</option>
+                </select>
+            </div>
+
             {showCreate && (
-                // ✅ Truyền isLoading vào
                 <SubForm values={form} onChange={setForm}
                     onSubmit={handleCreate} onCancel={() => setShowCreate(false)}
                     title="💳 Thêm Subscription" isLoading={isLoading} />
             )}
 
             {editSub && (
-                // ✅ Truyền isLoading vào
                 <SubForm values={editForm} onChange={setEditForm}
                     onSubmit={handleUpdate} onCancel={() => setEditSub(null)}
                     title={`✏️ Sửa ${editSub.serviceName}`} isLoading={isLoading} />
@@ -170,7 +226,7 @@ export default function SubscriptionsPage() {
                                         </div>
                                         <div style={{ textAlign: 'right' }}>
                                             <div style={{ fontSize: '1.1rem', fontWeight: 700, color: sc.color }}>
-                                                {formatVND(s.price)}
+                                                {formatThousandVND(s.price)}
                                             </div>
                                             <div style={{ fontSize: '0.72rem', color: 'var(--text)' }}>{s.billingCycle}</div>
                                         </div>

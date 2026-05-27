@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { PromiseState, PromiseItem, Pagination } from '@/types/store';
+import type { PromiseState, Pagination } from '@/types/store';
 import type { CreatePromiseRequest, UpdatePromiseRequest } from '@/types/request';
 import { promiseService } from '@/services/promiseService';
 import type { PromiseFilters } from '@/services/promiseService';
@@ -68,8 +68,8 @@ export const usePromiseStore = create<PromiseState>()((set, get) => ({
     create: async (data: CreatePromiseRequest) => {
         set({ isLoading: true, error: null });
         try {
-            const promise = await promiseService.create(data);
-            set((state) => ({ promises: [promise, ...state.promises] }));
+            await promiseService.create(data);
+            get().setPage(1);
             toast.success('Tạo promise thành công!');
         } catch (error) {
             set({ error: 'Tạo promise thất bại' });
@@ -82,11 +82,8 @@ export const usePromiseStore = create<PromiseState>()((set, get) => ({
     update: async (id: number, data: UpdatePromiseRequest) => {
         set({ isLoading: true, error: null });
         try {
-            const updated = await promiseService.update(id, data);
-            set((state) => ({
-                promises: state.promises.map((p) => (p.id === id ? updated : p)),
-                currentPromise: updated,
-            }));
+            await promiseService.update(id, data);
+            get().getAll();
             toast.success('Cập nhật thành công!');
         } catch (error) {
             set({ error: 'Cập nhật promise thất bại' });
@@ -100,9 +97,7 @@ export const usePromiseStore = create<PromiseState>()((set, get) => ({
         set({ isLoading: true, error: null });
         try {
             await promiseService.delete(id);
-            set((state) => ({
-                promises: state.promises.filter((p) => p.id !== id),
-            }));
+            get().getAll();
             toast.success('Xoá thành công!');
         } catch (error) {
             set({ error: 'Xoá promise thất bại' });

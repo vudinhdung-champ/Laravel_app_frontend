@@ -6,16 +6,16 @@ import type { CreateSubscriptionRequest, UpdateSubscriptionRequest } from '@/typ
 export interface SubscriptionFilters {
     search?: string;
     status?: string;
-    billingCycle?: number;
+    billing_cycle?: string;
     page?: number;
     per_page?: number;
 }
 
 
 export const subscriptionService = {
-    getAll: async (params?: SubscriptionFilters): Promise<{data: Subscription[]; meta: any}> => {
-        const { data } = await api.get('/subscriptions', {params});
-        return {data: data.data, meta: data.meta};
+    getAll: async (params?: SubscriptionFilters): Promise<{ data: Subscription[]; meta: any; totalCost: any }> => {
+        const { data } = await api.get('/subscriptions', { params });
+        return { data: data.data, meta: data.meta, totalCost: data.totalCost };
 
     },
 

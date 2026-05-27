@@ -8,10 +8,8 @@ type PromiseStatus = 'pending' | 'kept' | 'broken' | 'completed' | 'cancelled';
 
 const statusConfig: Record<string, { label: string; badge: string }> = {
     pending: { label: 'Đang chờ', badge: 'badge-warning' },
-    kept: { label: 'Đã thực hiện', badge: 'badge-success' },
-    broken: { label: 'Đã vi phạm', badge: 'badge-danger' },
     completed: { label: 'Hoàn thành', badge: 'badge-success' },
-    cancelled: { label: 'Đã huỷ', badge: 'badge-neutral' },
+    cancelled: { label: 'Đã thất hứa', badge: 'badge-neutral' },
 };
 
 const importanceDots = (level: number) =>
@@ -45,30 +43,30 @@ const PromiseForm = ({ values, onChange, onSubmit, onCancel, title, isLoading }:
                     </div>
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                         <div className="form-group">
-                            <label className="form-label">Ngày hứa</label>
+                            <label className="form-label">Ngày hứa *</label>
                             <input className="input" type="date" value={values.dateMade}
-                                onChange={e => onChange({ ...values, dateMade: e.target.value })} />
+                                onChange={e => onChange({ ...values, dateMade: e.target.value })} required />
                         </div>
                         <div className="form-group">
-                            <label className="form-label">Thời hạn</label>
+                            <label className="form-label">Thời hạn *</label>
                             <input className="input" type="date" value={values.deadline}
-                                onChange={e => onChange({ ...values, deadline: e.target.value })} />
+                                onChange={e => onChange({ ...values, deadline: e.target.value })} required />
                         </div>
                     </div>
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                         <div className="form-group">
-                            <label className="form-label">Trạng thái</label>
+                            <label className="form-label">Trạng thái *</label>
                             <select className="input" value={values.status}
-                                onChange={e => onChange({ ...values, status: e.target.value as PromiseStatus })}>
+                                onChange={e => onChange({ ...values, status: e.target.value as PromiseStatus })} required>
                                 <option value="pending">Đang chờ</option>
-                                <option value="kept">Đã thực hiện</option>
-                                <option value="broken">Đã vi phạm</option>
+                                <option value="completed">Đã thực hiện</option>
+                                <option value="cancelled">Đã thất hứa</option>
                             </select>
                         </div>
                         <div className="form-group">
-                            <label className="form-label">Độ quan trọng (1–5)</label>
+                            <label className="form-label">Độ quan trọng (1–5) *</label>
                             <input className="input" type="number" min={1} max={5} value={values.importanceLevel}
-                                onChange={e => onChange({ ...values, importanceLevel: Number(e.target.value) })} />
+                                onChange={e => onChange({ ...values, importanceLevel: Number(e.target.value) })} required />
                         </div>
                     </div>
                 </div>
@@ -84,7 +82,7 @@ const PromiseForm = ({ values, onChange, onSubmit, onCancel, title, isLoading }:
 );
 
 export default function PromisesPage() {
-    const { promises, getAll, isLoading, create, update, delete: deletePromise, pagination, setPage } = usePromiseStore();
+    const { promises, getAll, isLoading, create, update, delete: deletePromise, pagination, setPage, filters, setFilter } = usePromiseStore();
 
     const [showCreate, setShowCreate] = useState(false);
     const [form, setForm] = useState<CreatePromiseRequest>({
@@ -131,6 +129,42 @@ export default function PromisesPage() {
                     <p className="page-subtitle">{promises.length} lời hứa</p>
                 </div>
                 <button className="btn btn-primary" onClick={() => setShowCreate(true)}>+ Tạo mới</button>
+            </div>
+
+            {/* ── Filter Bar ── */}
+            <div className="filter-bar">
+                <input
+                    type="text"
+                    className="input"
+                    placeholder="🔍 Tìm kiếm người hứa..."
+                    value={filters.search || ''}
+                    onChange={(e) => setFilter('search', e.target.value)}
+                    style={{ flex: 1, minWidth: 200 }}
+                />
+                <select
+                    className="input"
+                    value={filters.status || ''}
+                    onChange={(e) => setFilter('status', e.target.value)}
+                    style={{ width: 160 }}
+                >
+                    <option value="">Tất cả trạng thái</option>
+                    <option value="pending">Chờ xử lý</option>
+                    <option value="completed">Đã giữ lời</option>
+                    <option value="cancelled">Đã thất hứa</option>
+                </select>
+                <select
+                    className="input"
+                    value={filters.importance_level || ''}
+                    onChange={(e) => setFilter('importance_level', e.target.value ? Number(e.target.value) : undefined)}
+                    style={{ width: 140 }}
+                >
+                    <option value="">Tất cả mức độ</option>
+                    <option value="1">⭐</option>
+                    <option value="2">⭐⭐</option>
+                    <option value="3">⭐⭐⭐</option>
+                    <option value="4">⭐⭐⭐⭐</option>
+                    <option value="5">⭐⭐⭐⭐⭐</option>
+                </select>
             </div>
 
             {showCreate && (

@@ -139,6 +139,34 @@ p  { color: var(--text); }
 
 select.input { cursor: pointer; }
 
+/* ─── Filter Bar ─────────────────────────────────────── */
+.filter-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  padding: 16px;
+  border-radius: var(--radius-lg);
+  margin-bottom: 24px;
+  backdrop-filter: blur(12px);
+  align-items: center;
+}
+.filter-bar .input {
+  background: #ffffff;
+  color: #0f172a;
+  border-color: var(--border-light);
+  height: 42px;
+}
+.filter-bar .input::placeholder {
+  color: #64748b;
+}
+.filter-bar .input:focus {
+  background: #ffffff;
+  border-color: var(--accent);
+}
+
+
 /* ─── Cards ──────────────────────────────────────────── */
 .card {
   background: var(--surface);

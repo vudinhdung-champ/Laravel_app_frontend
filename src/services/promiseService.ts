@@ -6,7 +6,7 @@ import type { CreatePromiseRequest, UpdatePromiseRequest } from '@/types/request
 export interface PromiseFilters {
     search?: string;
     status?: string;
-    importanceLevel?: number;
+    importance_level?: number;
     page?: number;
     per_page?: number;
 }
