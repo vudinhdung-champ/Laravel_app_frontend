@@ -2,7 +2,8 @@ import { useEffect, useState } from "react";
 import { useSubStore } from "@/stores/useSubStore";
 import type { CreateSubscriptionRequest, UpdateSubscriptionRequest } from "@/types/request";
 import type { Subscription } from "@/types/store";
-import Pagination from "@/components/Pagination";
+import { useInView } from "react-intersection-observer"; // ✅ Thêm thư viện bắt sự kiện cuộn
+import { SubSkeletonCard } from "@/components/subSkeletonCard";
 
 const statusConfig: Record<string, { label: string; badge: string; color: string }> = {
     active: { label: 'Đang hoạt động', badge: 'badge-success', color: '#10b981' },
@@ -81,8 +82,9 @@ const SubForm = ({ values, onChange, onSubmit, onCancel, title, isLoading }: any
 export default function SubscriptionsPage() {
     const {
         subscriptions, getAll, isLoading, create, update, delete: deleteSub,
-        pagination, setPage, filters, setFilter,
-        totalMonthly, totalYearly
+        pagination, filters, setFilter,
+        totalMonthly, totalYearly,
+        loadMore, isFetchingNextPage
     } = useSubStore();
 
     const [showCreate, setShowCreate] = useState(false);
@@ -91,7 +93,18 @@ export default function SubscriptionsPage() {
     const [editSub, setEditSub] = useState<Subscription | null>(null);
     const [editForm, setEditForm] = useState<UpdateSubscriptionRequest>({ ...emptyForm });
 
-    useEffect(() => { getAll(); }, []);
+    const { ref, inView } = useInView({ threshold: 0 });
+
+    // Kích hoạt tải thêm khi cuộn tới ref //
+    useEffect(() => {
+        if (inView && subscriptions.length > 0 && !isLoading) {
+            loadMore();
+        }
+    }, [inView, loadMore, subscriptions.length, isLoading]);
+
+    useEffect(() => {
+        setFilter('page', 1);
+    }, []);
 
     const handleCreate = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -193,9 +206,10 @@ export default function SubscriptionsPage() {
             )}
 
             {isLoading && subscriptions.length === 0 ? (
-                <div className="loading-screen" style={{ height: 300 }}>
-                    <span className="spinner" style={{ width: 32, height: 32, borderWidth: 3 }} />
-                    <p>Đang tải...</p>
+                <div className="grid-2">
+                    {[1, 2, 3].map((n) => (
+                        <SubSkeletonCard key={n} />
+                    ))}
                 </div>
             ) : subscriptions.length === 0 ? (
                 <div className="empty-state">
@@ -260,12 +274,28 @@ export default function SubscriptionsPage() {
                             );
                         })}
                     </div>
-                    <Pagination
-                        page={pagination.page}
-                        lastPage={pagination.lastPage}
-                        total={pagination.total}
-                        setPage={setPage}
-                    />
+
+                    {/* ✅ KHU VỰC INFINITE SCROLL */}
+                    <div style={{ marginTop: 24, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
+                        {/* Thẻ div làm mốc bắt sự kiện cuộn */}
+                        <div ref={ref} style={{ height: 10, width: '100%' }} />
+
+                        {/* Vòng xoay khi đang cuộn tải thêm */}
+                        {isFetchingNextPage && (
+                            <div className="grid-2" style={{ width: '100%', marginTop: 16 }}>
+                                <SubSkeletonCard />
+                                <SubSkeletonCard />
+                                <SubSkeletonCard />
+                            </div>
+                        )}
+
+                        {/* Thông báo đã xem hết danh sách */}
+                        {!isFetchingNextPage && pagination.page >= pagination.lastPage && subscriptions.length > 0 && (
+                            <p style={{ color: 'var(--text)', fontSize: '0.875rem', opacity: 0.5, margin: '10px 0' }}>
+                                Bạn đã xem hết danh sách!
+                            </p>
+                        )}
+                    </div>
                 </>
             )}
         </div>

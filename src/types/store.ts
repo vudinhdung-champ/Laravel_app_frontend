@@ -115,17 +115,18 @@ export interface SubscriptionState {
     subscriptions: Subscription[];
     currentSubscription: Subscription | null;
     isLoading: boolean;
+    isFetchingNextPage: boolean;
     error: string | null;
     filters: SubscriptionFilters;
     pagination: Pagination;
     totalMonthly: number;
     totalYearly: number;
 
-    getAll: (params?: SubscriptionFilters) => Promise<void>;
+    getAll: (params?: SubscriptionFilters, isLoadMore?: boolean) => Promise<void>;
     setFilter: (key: keyof SubscriptionFilters, value: any) => void;
     resetFilters: () => void;
-    setPage: (page: number) => void;
     getById: (id: Number) => Promise<void>;
+    loadMore: () => void;
     create: (data: CreateSubscriptionRequest) => Promise<void>;
     update: (id: Number, data: UpdateSubscriptionRequest) => Promise<void>;
     delete: (id: number) => Promise<void>;

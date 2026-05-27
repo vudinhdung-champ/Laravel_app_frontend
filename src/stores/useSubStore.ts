@@ -5,7 +5,7 @@ import { subscriptionService } from '@/services/subscriptionService';
 import type { SubscriptionFilters } from '@/services/subscriptionService';
 import toast from 'react-hot-toast';
 
-const DEFAULT_FILTERS: SubscriptionFilters = { search: '', status: '', page: 1, per_page: 6 };
+const DEFAULT_FILTERS: SubscriptionFilters = { search: '', status: '', page: 1, per_page: 3 };
 
 
 export const useSubStore = create<SubscriptionState>()((set, get) => ({
@@ -17,14 +17,19 @@ export const useSubStore = create<SubscriptionState>()((set, get) => ({
     pagination: { page: 1, lastPage: 1, total: 0 } as Pagination,
     totalMonthly: 0,
     totalYearly: 0,
+    isFetchingNextPage: false,
 
-    getAll: async (params) => {
+    getAll: async (params, isLoadMore = false) => {
         const merged = { ...get().filters, ...params };
-        set({ isLoading: true, error: null });
+        if (isLoadMore) {
+            set({ isFetchingNextPage: true, error: null });
+        } else {
+            set({ isLoading: true, error: null });
+        }
         try {
             const { data, meta, totalCost } = await subscriptionService.getAll(merged);
             set({
-                subscriptions: data,
+                subscriptions: isLoadMore ? [...get().subscriptions, ...data] : data,
                 pagination: {
                     page: meta?.current_page ?? 1,
                     lastPage: meta?.last_page ?? 1,
@@ -36,25 +41,33 @@ export const useSubStore = create<SubscriptionState>()((set, get) => ({
         } catch (error) {
             set({ error: 'Không thể tải danh sách subscription' });
         } finally {
-            set({ isLoading: false });
+            set({ isLoading: false, isFetchingNextPage: false });
         }
+    },
+
+
+    loadMore: () => {
+        const { pagination, isFetchingNextPage, isLoading } = get();
+        if (isLoading || isFetchingNextPage || pagination.page >= pagination.lastPage) {
+            return;
+        }
+
+        const nextPage = pagination.page + 1;
+        const newFilters = { ...get().filters, page: nextPage };
+        set({ filters: newFilters });
+        get().getAll(newFilters, true);
+
     },
 
     setFilter: (key, value) => {
         const newFilters = { ...get().filters, [key]: value, page: 1 };
         set({ filters: newFilters });
-        get().getAll(newFilters);
+        get().getAll(newFilters, false);
     },
 
     resetFilters: () => {
         set({ filters: { ...DEFAULT_FILTERS } });
-        get().getAll({ ...DEFAULT_FILTERS });
-    },
-
-    setPage: (page) => {
-        const newFilters = { ...get().filters, page };
-        set({ filters: newFilters });
-        get().getAll(newFilters);
+        get().getAll({ ...DEFAULT_FILTERS }, false);
     },
 
     getById: async (id: number) => {
@@ -73,7 +86,9 @@ export const useSubStore = create<SubscriptionState>()((set, get) => ({
         set({ isLoading: true, error: null });
         try {
             await subscriptionService.create(data);
-            get().setPage(1);
+            const reserFilters = { ...get().filters, page: 1 };
+            set({ filters: reserFilters })
+            get().getAll(reserFilters, false);
             toast.success('Tạo subscription thành công!');
         } catch (error) {
             set({ error: 'Tạo subscription thất bại' });
@@ -87,7 +102,9 @@ export const useSubStore = create<SubscriptionState>()((set, get) => ({
         set({ isLoading: true, error: null });
         try {
             await subscriptionService.update(id, data);
-            get().getAll();
+            const reserFilters = { ...get().filters, page: 1 };
+            set({ filters: reserFilters })
+            get().getAll(reserFilters, false);
             toast.success('Cập nhật thành công!');
         } catch (error) {
             set({ error: 'Cập nhật subscription thất bại' });
@@ -101,7 +118,9 @@ export const useSubStore = create<SubscriptionState>()((set, get) => ({
         set({ isLoading: true, error: null });
         try {
             await subscriptionService.delete(id);
-            get().getAll();
+            const reserFilters = { ...get().filters, page: 1 };
+            set({ filters: reserFilters })
+            get().getAll(reserFilters, false);
             toast.success('Xoá thành công!');
         } catch (error) {
             set({ error: 'Xoá subscription thất bại' });
