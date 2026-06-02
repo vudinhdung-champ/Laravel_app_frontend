@@ -39,8 +39,12 @@ export const subscriptionService = {
 
     delete: async (id: number): Promise<void> => {
         await api.delete(`/subscriptions/${id}`);
-    }
+    },
 
+    exportAllAndEmail: async (): Promise<{ status: string; message: string }> => {
+        const { data } = await api.post('/export-all-email');
+        return data;
+    },
 
 }
 

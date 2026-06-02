@@ -28,6 +28,7 @@ export const useSubStore = create<SubscriptionState>()((set, get) => ({
         }
         try {
             const { data, meta, totalCost } = await subscriptionService.getAll(merged);
+            console.log("TOTAL COST: ", totalCost);
             set({
                 subscriptions: isLoadMore ? [...get().subscriptions, ...data] : data,
                 pagination: {

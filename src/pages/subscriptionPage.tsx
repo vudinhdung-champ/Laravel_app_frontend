@@ -225,6 +225,7 @@ export default function SubscriptionsPage() {
                 <>
                     <div className="grid-2">
                         {subscriptions.map((s) => {
+                            console.log(">>check log subscrip: ", s);
                             const sc = statusConfig[s.status] ?? statusConfig['active'];
                             return (
                                 <div key={s.id} className="card animate-slide">

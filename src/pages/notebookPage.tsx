@@ -243,7 +243,6 @@ function NoteFormModal({
 
 // ─── Main Page ────────────────────────────────────────
 export default function NotebooksPage() {
-    // ✅ Lấy thêm getById từ store ra
     const { notebooks, getAll, isLoading, create, update, delete: deleteNote, pagination, setPage, filters, setFilter, getById } = useNotebookStore();
 
     const [showCreate, setShowCreate] = useState(false);
@@ -252,7 +251,6 @@ export default function NotebooksPage() {
     const [editNotebook, setEditNotebook] = useState<Notebook | null>(null);
     const [editForm, setEditForm] = useState<UpdateNotebookRequest>({ title: '', content: '', category: '' });
 
-    // ✅ State lưu ghi chú đang xem
     const [viewNotebook, setViewNotebook] = useState<Notebook | null>(null);
 
     useEffect(() => { getAll(); }, []);
@@ -264,7 +262,6 @@ export default function NotebooksPage() {
         setForm({ title: '', content: '', category: '' });
     };
 
-    // ✅ Sửa lại hàm Edit: Gọi API lấy full data
     const handleEditClick = async (n: Notebook) => {
         const fullNote = await getById(n.id);
         if (fullNote) {
@@ -273,7 +270,6 @@ export default function NotebooksPage() {
         }
     };
 
-    // ✅ Hàm View: Gọi API lấy full data
     const handleViewClick = async (n: Notebook) => {
         const fullNote = await getById(n.id);
         if (fullNote) {
